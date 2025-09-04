@@ -1,12 +1,13 @@
-from fastapi import FastAPI, UploadFile, File, Form
-from pydantic import BaseModel
-from typing import List, Dict, Any
+from fastapi import FastAPI
+
 from src.pronounciation_scorer import PronounciationScorer
 from src.mistake_finder import MistakeFinderBasic
 from src.recognition_model import WhisperRecognitionModel
 from src.tts_model import KokoroTTSModel
 from src.llm_model import HuggingFaceLLMModel, TargetSentencePrompt, SuggestionPrompt
 from src.data_classes import AudioRecording, Mistake
+from src.requests import SentenceRequest, FindMistakesRequest, SuggestionRequest
+from src.responses import TargetSentenceResponse, AudioRecordingResponse, MistakeResponse, SuggestionResponse
 
 
 app = FastAPI()
@@ -22,30 +23,6 @@ scorer = PronounciationScorer(
     ),
     mistake_finder=MistakeFinderBasic()
 )
-
-
-class SentenceRequest(BaseModel):
-    sentence: str
-
-class FindMistakesRequest(BaseModel):
-    sentence: str
-    recording_dict: dict
-
-class SuggestionRequest(BaseModel):
-    sentence: str
-    mistake_dict: dict
-
-class TargetSentenceResponse(BaseModel):
-    target_sentence: str
-
-class AudioRecordingResponse(BaseModel):
-    audio_data: Dict[str, Any]
-
-class MistakeResponse(BaseModel):
-    mistakes: List[Dict[str, Any]]
-
-class SuggestionResponse(BaseModel):
-    suggestion: str
 
 
 @app.post("/generate_target_sentence", response_model=TargetSentenceResponse)

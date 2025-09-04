@@ -4,6 +4,7 @@ from scipy.signal import resample
 import scipy.io.wavfile
 import io
 
+
 @dataclass
 class AudioRecording:
     samples: np.ndarray
@@ -22,7 +23,6 @@ class AudioRecording:
         )
     
     def to_json(self) -> dict:
-        # Convert samples to list of floats for JSON serialization
         return {
             "samples": self.samples.tolist(),
             "sample_rate": self.sample_rate,
