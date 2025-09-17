@@ -28,7 +28,7 @@ class MistakeFinderBasic(MistakeFinder):
         target_sent_words = self._split_with_indices(target_sentence.sentence)
         pred_sent_words = self._split_with_indices(transcription.sentence)
         mistakes = [
-            Mistake(target_idx, target_idx + len(target_word), pred_word)
+            Mistake(target_idx, target_idx + len(target_word) - 1, pred_word)
             for (target_word, target_idx), (pred_word, _) in zip(target_sent_words, pred_sent_words)
             if target_word != pred_word
         ]
