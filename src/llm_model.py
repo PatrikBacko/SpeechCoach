@@ -76,6 +76,11 @@ class HuggingFaceLLMModel(LLMModel):
         self._target_sentence_do_sample = target_sentence_do_sample
         self._suggestion_temperature = suggestion_temperature
         self._suggestion_do_sample = suggestion_do_sample
+        self._pipe = pipeline(
+            "text-generation",
+            model=self._model,
+            tokenizer=self._tokenizer,
+        )
 
     @classmethod
     def create_from_name(
@@ -97,18 +102,13 @@ class HuggingFaceLLMModel(LLMModel):
     @override
     def generate_target_sentence(self) -> str:
         messages = self._target_sentence_prompt()
-        pipe = pipeline(
-            "text-generation",
-            model=self._model,
-            tokenizer=self._tokenizer,
-        )
         generation_args = {
             "max_new_tokens": 500,
             "return_full_text": False,
             "temperature": self._target_sentence_temperature,
             "do_sample": self._target_sentence_do_sample,
         }
-        output = pipe(messages, **generation_args)
+        output = self._pipe(messages, **generation_args)
         return output[0]['generated_text']
 
     @override
@@ -118,16 +118,11 @@ class HuggingFaceLLMModel(LLMModel):
             mistake.mistaken_text,
             sentence[mistake.start_idx:mistake.end_idx]
         )
-        pipe = pipeline(
-            "text-generation",
-            model=self._model,
-            tokenizer=self._tokenizer,
-        )
         generation_args = {
             "max_new_tokens": 500,
             "return_full_text": False,
             "temperature": self._suggestion_temperature,
             "do_sample": self._suggestion_do_sample,
         }
-        output = pipe(messages, **generation_args)
+        output = self._pipe(messages, **generation_args)
         return output[0]['generated_text']

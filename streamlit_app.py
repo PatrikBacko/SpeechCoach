@@ -1,18 +1,19 @@
 import streamlit as st
-from st_audiorec import st_audiorec
+from streamlit_mic_recorder import mic_recorder
 import requests
+from pydub import AudioSegment
+import io
 
 from src.data_classes import AudioRecording, Mistake
 from src.requests import SentenceRequest, FindMistakesRequest, SuggestionRequest
 from src.responses import TargetSentenceResponse, AudioRecordingResponse, MistakeResponse, SuggestionResponse
 
 
-API_URL = "http://127.0.0.1:8000"
-# API_URL = "http://n25:8000/"
+# API_URL = "http://127.0.0.1:8000"
+API_URL = "http://n28:8000/"
 
 
 st.title("SpeechCoach")
-
 
 
 def highlight_text_with_mistakes(text: str, mistakes: list[Mistake]) -> str:
@@ -72,15 +73,26 @@ if gen_tts and sentence:
 
 
 st.header("Record Your Pronunciation")
-audio_bytes = st_audiorec()
+audio = mic_recorder(
+    start_prompt="Start recording",
+    stop_prompt="Stop recording",
+    key="speech"
+)
 audio_file = None
-if audio_bytes:
-    audio_file = ("user_recording.wav", audio_bytes, "audio/wav")
-
+if audio and "bytes" in audio:
+    st.audio(audio["bytes"], format="audio/wav")
+    audio_file = ("user_recording.wav", audio["bytes"], "audio/wav")
 
 if st.button("Find Mistakes"):
     if sentence and audio_file:
-        audio_recording = AudioRecording.from_wav_bytes(audio_bytes)
+        # Convert WebM bytes to WAV bytes
+        webm_bytes = audio["bytes"]
+        audio_segment = AudioSegment.from_file(io.BytesIO(webm_bytes), format="webm")
+        wav_io = io.BytesIO()
+        audio_segment.export(wav_io, format="wav")
+        wav_bytes = wav_io.getvalue()
+
+        audio_recording = AudioRecording.from_wav_bytes(wav_bytes)
         request = FindMistakesRequest(**{
             'sentence': sentence,
             'recording_dict': audio_recording.to_json(),

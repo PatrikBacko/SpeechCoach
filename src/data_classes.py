@@ -9,7 +9,7 @@ import io
 class AudioRecording:
     samples: np.ndarray
     sample_rate: int
-    sentence: str | None
+    sentence: str | None = None
 
     def resample(self, target_sample_rate: int) -> "AudioRecording":
         if self.sample_rate == target_sample_rate:
