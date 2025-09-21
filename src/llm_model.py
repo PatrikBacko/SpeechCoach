@@ -27,19 +27,26 @@ class SuggestionPrompt:
         self,
         sentence: str,
         mistake_word: str,
-        incorrect_pronunciation: str,
+        incorrect_pronunciation: str | None = None,
     ):
         return [
             {"role": "system", "content": "You are a helpful pronunciation assistant. " 
                                         "Your task is to help users improve their pronunciation by: "
-                                        "- Identifying the difference between the correct word and what the user said incorrectly. "
+                                        + ("- Identifying the difference between the correct word and what the user said incorrectly. "
+                                            if incorrect_pronunciation is not None
+                                            else ''
+                                        ) +
                                         "- Explaining how the correct word should be pronounced, using simple phonetic hints or IPA (International Phonetic Alphabet). "
                                         "- Giving a short, clear tip on how to shape the mouth, tongue, or voice to pronounce correctly. "
                                         "- Keeping explanations concise, supportive, and easy to follow. "
                                         "Always respond in a friendly, encouraging way. "
                                         "Do not overwhelm the user with long linguistic theory — focus on practical help. "
                                         f"Sentence: {sentence} "
-                                        f"Mistake: {mistake_word} -> {incorrect_pronunciation} "
+                                        f"Mistake: {mistake_word}"
+                                        + (f"-> {incorrect_pronunciation} "
+                                            if incorrect_pronunciation is not None
+                                            else ''
+                                        ) +
                                         f"Please help to the user: "
             },
         ]

@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 
 from src.pronounciation_scorer import PronounciationScorer
-from src.mistake_finder import MistakeFinderBasic
+from src.mistake_finder import MistakeFinderCompareWords, get_mistake_finder, MistakeFinderType
 from src.recognition_model import WhisperRecognitionModel
 from src.tts_model import KokoroTTSModel
 from src.llm_model import HuggingFaceLLMModel, TargetSentencePrompt, SuggestionPrompt
 from src.data_classes import AudioRecording, Mistake
-from src.requests import SentenceRequest, FindMistakesRequest, SuggestionRequest
+from src.requests import SentenceRequest, FindMistakesRequest, SuggestionRequest, ChangeMistakeFinderRequest
 from src.responses import TargetSentenceResponse, AudioRecordingResponse, MistakeResponse, SuggestionResponse
 
 
@@ -21,7 +21,7 @@ scorer = PronounciationScorer(
         TargetSentencePrompt(),
         SuggestionPrompt(),
     ),
-    mistake_finder=MistakeFinderBasic()
+    mistake_finder=MistakeFinderCompareWords()
 )
 
 
@@ -49,3 +49,9 @@ def generate_suggestion(request: SuggestionRequest) -> SuggestionResponse:
     mistake = Mistake.from_json(request.mistake_dict)
     suggestion = scorer.generetare_suggestion(mistake, request.sentence)
     return SuggestionResponse(suggestion=suggestion)
+
+
+@app.post("/change_mistake_finder", response_model=None)
+def change_mistake_finder(request: ChangeMistakeFinderRequest) -> None:
+    scorer.change_mistake_finder(get_mistake_finder(request.type))
+    return None

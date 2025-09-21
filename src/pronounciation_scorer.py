@@ -50,3 +50,9 @@ class PronounciationScorer:
         sentence: str
     ) -> AudioRecording:
         return self._tts_model.synthesize(sentence)
+
+    def change_mistake_finder(
+        self,
+        mistake_finder: MistakeFinder
+    ) -> None:
+        self._mistake_finder = mistake_finder

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from src.pronounciation_scorer import PronounciationScorer
-from src.mistake_finder import MistakeFinderBasic
+from src.mistake_finder import MistakeFinderCompareWords
 from src.recognition_model import WhisperRecognitionModel
 from src.tts_model import KokoroTTSModel
 from src.llm_model import HuggingFaceLLMModel
@@ -19,7 +19,7 @@ def main():
             TargetSentencePrompt(),
             SuggestionPrompt(),
         ),
-        mistake_finder=MistakeFinderBasic()
+        mistake_finder=MistakeFinderCompareWords()
     )
 
     target_sentence = a.generate_target_sentence()

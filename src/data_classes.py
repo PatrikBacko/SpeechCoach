@@ -70,7 +70,7 @@ class TargetSentence:
 class Mistake:
     start_idx: int
     end_idx: int
-    mistaken_text: str
+    mistaken_text: str | None = None
 
     def to_json(self) -> dict:
         return {
