@@ -1,6 +1,8 @@
+import argparse
+import requests
+
 import streamlit as st
 from streamlit_mic_recorder import mic_recorder
-import requests
 
 from src.data_classes import AudioRecording, Mistake
 from src.requests import SentenceRequest, FindMistakesRequest, SuggestionRequest, ChangeMistakeFinderRequest
@@ -8,11 +10,15 @@ from src.mistake_finder import MistakeFinderType
 from src.responses import TargetSentenceResponse, AudioRecordingResponse, MistakeResponse, SuggestionResponse
 
 
-API_URL = "http://127.0.0.1:8000"
-# API_URL = "http://n32:8000/"
-
-
-st.title("SpeechCoach")
+def return_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--api_url",
+        type=str,
+        default="http://127.0.0.1:8000",
+        help="URL of the backend API"
+    )
+    return parser
 
 
 def highlight_text_with_mistakes(text: str, mistakes: list[Mistake], size: float = 1.5) -> str:
@@ -48,6 +54,12 @@ def highlight_text_with_mistakes(text: str, mistakes: list[Mistake], size: float
 
     return result
 
+parser = return_parser()
+args = parser.parse_args()
+API_URL = args.api_url
+
+st.title("SpeechCoach")
+
 gen_sentence = st.button("Generate Target Sentence")
 if gen_sentence:
     with st.spinner("Generating target sentence..."):
@@ -56,7 +68,6 @@ if gen_sentence:
         st.session_state["target_sentence"] = TargetSentenceResponse(**resp.json()).target_sentence
     else:
         st.error("Failed to generate target sentence.")
-
 
 sentence = st.text_input("Sentence to practice", value=st.session_state.get("target_sentence", ""))
 

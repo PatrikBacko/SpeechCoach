@@ -42,8 +42,8 @@ class SuggestionPrompt:
                                         "Always respond in a friendly, encouraging way. "
                                         "Do not overwhelm the user with long linguistic theory — focus on practical help. "
                                         f"Sentence: {sentence} "
-                                        f"Mistake: {mistake_word}"
-                                        + (f"-> {incorrect_pronunciation} "
+                                        f"Word where mispronouciation was detected: {mistake_word}"
+                                        + (f"-> {incorrect_pronunciation} (the mispronunciation detected by the system)."
                                             if incorrect_pronunciation is not None
                                             else ''
                                         ) +

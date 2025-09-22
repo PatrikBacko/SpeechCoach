@@ -1,7 +1,5 @@
 # SpeechCoach
 
-This project is work in progress, thus it is not in fully functional state, and there is not a proper documentation and deployment created yet.
-
 SpeechCoach is an interactive pronunciation helper app designed to help users improve their spoken language skills. The app guides users through a process of practicing sentences, receiving feedback on pronunciation mistakes, and getting personalized suggestions for improvement.
 
 ## Quick Introduction
@@ -16,7 +14,9 @@ SpeechCoach generates a practice sentence using a Large Language Model (LLM), sy
 
 3. **User Recording**: Users record themselves reading the sentence directly in the app using a browser-based audio recorder (st_audiorec for Streamlit).
 
-4. **Pronunciation Analysis**: The user's recording is analyzed using the WhisperRecognitionModel (OpenAI Whisper-small.en) to transcribe and score pronunciation. MistakeFinderBasic is used to identify specific pronunciation mistakes.
+4. **Pronunciation Analysis**: The user's recording is analyzed using the WhisperRecognitionModel (OpenAI Whisper-small.en) to transcribe and score pronunciation. Then the MistakeFinder models identify specific words or sounds that were mispronounced.
+   - MistakeFinderCompareWords: Compares the transcribed words with the target sentence to find mismatches.
+   - MistakeFinderTokenConfidence: Uses token-level confidence scores from the ASR model to identify low-confidence words that may indicate pronunciation issues.
 
 5. **Mistake Feedback & Suggestions**: Detected mistakes are sent to the LLM, which generates personalized suggestions on how to improve pronunciation for the problematic words or sounds.
 
@@ -27,14 +27,12 @@ SpeechCoach generates a practice sentence using a Large Language Model (LLM), sy
 - **OpenAI Whisper**: For automatic speech recognition and pronunciation scoring.
 - **KokoroTTSModel**: For generating TTS audio from text.
 - **Microsoft Phi-4-mini-instruct (LLM)**: For generating practice sentences and personalized feedback.
-- **MistakeFinderBasic**: For basic mistake detection in user pronunciation.
 - **Pydantic**: For data validation and serialization in API requests and responses.
-- **st_audiorec**: For browser-based audio recording in Streamlit.
 
 ## File Structure Overview
 
-- `main.py`: FastAPI backend with endpoints for sentence generation, TTS, mistake detection, and suggestions.
-- `streamlit_app.py`: Streamlit frontend for user interaction, audio recording, and displaying feedback.
+- `backend.py`: FastAPI backend with endpoints for sentence generation, TTS, mistake detection, and suggestions.
+- `frontend.py`: Streamlit frontend for user interaction, audio recording, and displaying feedback.
 - `src/`: Contains model classes and utility functions:
   - `pronounciation_scorer.py`: Main logic for scoring pronunciation.
   - `mistake_finder.py`: Mistake detection logic.
@@ -42,6 +40,11 @@ SpeechCoach generates a practice sentence using a Large Language Model (LLM), sy
   - `tts_model.py`: TTS model integration.
   - `llm_model.py`: LLM integration for sentence generation and suggestions.
   - `data_classes.py`: Data structures for audio and mistakes.
+  - `requests.py`: API request and response pydantic models.
+  - `responses.py`: API response pydantic models.
+  - `utils.py`: Utility functions for audio processing.
+- `requirements.txt`: Python dependencies.
+- `README.md`: Project documentation.
 
 ## Getting Started
 
@@ -51,12 +54,15 @@ SpeechCoach generates a practice sentence using a Large Language Model (LLM), sy
    ```
 2. **Run the FastAPI backend**:
    ```bash
-   uvicorn main:app --port 8000
+   uvicorn backend:app --port 8000 --host <ip_address*>
    ```
+   *leave empty if you want to run on localhost
 3. **Start the Streamlit frontend**:
    ```bash
-   streamlit run streamlit_app.py
+   streamlit run frontend.py -- --api_url <url_to_your_backend*>
    ```
+   *leave empty if beckend is running on the same machine on port 8000
+
 4. Open the app in your browser and follow the instructions to practice pronunciation!
 
 ## License

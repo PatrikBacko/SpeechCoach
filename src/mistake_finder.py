@@ -44,81 +44,59 @@ class MistakeFinderCompareWords(MistakeFinder):
         return [(m.group(), m.start()) for m in pattern.finditer(text)]
 
 
-# class MistakeFinderTokenConfidence(MistakeFinderCompareWords):
-#     def __init__(
-#         self,
-#         threshold: float = 0.75
-#     ):
-#         super().__init__()
-#         self._threshold = threshold
+class MistakeFinderTokenConfidence(MistakeFinderCompareWords):
+    def __init__(
+        self,
+        threshold: float = 0.8
+    ):
+        super().__init__()
+        self._threshold = threshold
 
-#     @override
-#     def find_mistakes(
-#         self,
-#         transcription: Transcription,
-#         target_sentence: TargetSentence
-#     ) -> list[Mistake]:
-#         mistakes = []
+    @override
+    def find_mistakes(
+        self,
+        transcription: Transcription,
+        target_sentence: TargetSentence
+    ) -> list[Mistake]:
+        target_sent_words = self._split_with_indices(target_sentence.sentence)
+        pred_sent_words = self._split_with_indices(transcription.sentence)
+        pred_words, _ = zip(*pred_sent_words)
+        _, pred_tokens = zip(*self._align_words_with_tokens(pred_words, transcription.tokens_with_probs))
 
-#         target_sent_words = self._split_with_indices(target_sentence.sentence)
-#         pred_sent_words = self._split_with_indices(transcription.sentence)
-
-#         target_words, target_idxs = zip(*target_sent_words)
-#         pred_words, pred_idxs = zip(*pred_sent_words)
-#         target_tokens = target_sentence.tokens
-#         pred_tokens, pred_tokens_probs = zip(*transcription.tokens_with_probs)
-
-#         _, target_tokens = zip(*self._align_words_with_tokens(target_words, pred_tokens))
-#         _, pred_tokens = zip*(self._align_words_with_tokens(pred_words, pred_tokens))
-
-#         for (pred_token, prob), target_token in zip(transcription.tokens_with_probs, target_sentence.tokens):
-
-#             start = transcription.sentence.find(pred_token, mistakes[-1].end_idx + 1 if mistakes else 0)
-#             mistakes.append(Mistake(start, start + len(pred_token - 1), None))
-#         return mistakes
-    
-#     def _align_words_with_tokens(
-#         words: list[str],
-#         tokens: list[str]
-#     ) -> list[tuple[str, str]]:
-#         aligned = []
-#         token_list = []
-#         word_idx = 0
-#         for token in tokens:
-#             if token.startswith(' '):
-#                 token_list = []
-#                 aligned.append(words[word_idx], token_list)
-#                 word_idx += 1
-#             token_list.append(token)
-#         return aligned
+        mistakes = []
+        for (target_word, target_idx), pred_word, word_tokens in zip(target_sent_words, pred_words, pred_tokens):
+            if target_word != pred_word:
+                mistakes.append(Mistake(target_idx, target_idx + len(target_word) - 1, pred_word))
+            else:
+                for token, prob in word_tokens:
+                    if token == '.':
+                        continue
+                    if prob < self._threshold:
+                        mistakes.append(Mistake(target_idx, target_idx + len(target_word) - 1, None))
+                        break
+        return mistakes
 
 
-# class MistakeFinderCombined(MistakeFinder):
-#     def __init__(
-#         self,
-#         threshold: float = 0.75
-#     ):
-#         super().__init__()
-#         self._word_finder = MistakeFinderCompareWords()
-#         self._token_finder = MistakeFinderTokenConfidence(threshold)
-
-#     @override
-#     def find_mistakes(
-#         self,
-#         transcription: Transcription,
-#         target_sentence: TargetSentence
-#     ) -> list[Mistake]:
-#         word_mistakes = self._word_finder.find_mistakes(transcription, target_sentence)
-#         token_mistakes = self._token_finder.find_mistakes(transcription, target_sentence)
-
-#         #TODO        
-#         pass
+    def _align_words_with_tokens(
+        self,
+        words: list[str],
+        tokens_with_probs: list[tuple[str, int]]
+    ) -> list[tuple[str, tuple[str, int]]]:
+        aligned = []
+        token_list = []
+        word_idx = 0
+        for token, prob in tokens_with_probs:
+            if token.startswith(' '):
+                token_list = []
+                aligned.append((words[word_idx], token_list))
+                word_idx += 1
+            token_list.append((token, prob))
+        return aligned
 
 
 class MistakeFinderType(Enum):
     COMPARE_WORDS = "compare_words"
-    # TOKEN_CONFIDENCE = "token_confidence"
-    # COMBINED = "combined"
+    TOKEN_CONFIDENCE = "token_confidence"
 
 
 def get_mistake_finder(
@@ -129,7 +107,5 @@ def get_mistake_finder(
         return MistakeFinderCompareWords(**kws)
     elif mistake_finder_type == MistakeFinderType.TOKEN_CONFIDENCE:
         return MistakeFinderTokenConfidence(**kws)
-    elif mistake_finder_type == MistakeFinderType.COMBINED:
-        return MistakeFinderCombined(**kws)
     else:
         raise ValueError(f"Unknown mistake finder type: {mistake_finder_type}")
