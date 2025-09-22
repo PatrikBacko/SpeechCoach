@@ -48,7 +48,7 @@ SpeechCoach generates a practice sentence using a Large Language Model (LLM), sy
 1. **Install dependencies** (Streamlit, FastAPI, requests, Pydantic, st_audiorec, and model dependencies).
 2. **Run the FastAPI backend**:
    ```bash
-   python main.py
+   uvicorn main:app --port 8000
    ```
 3. **Start the Streamlit frontend**:
    ```bash
